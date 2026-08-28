@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Magic Mirror · RetailClub</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23000'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='16' cy='14' r='5'/%3E%3Crect x='7' y='22' width='2' height='2'/%3E%3Crect x='23' y='21' width='2' height='2'/%3E%3Crect x='12' y='26' width='2' height='2'/%3E%3Crect x='19' y='27' width='1' height='1'/%3E%3Crect x='4' y='12' width='1' height='1'/%3E%3Crect x='27' y='10' width='1' height='1'/%3E%3C/g%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+<script src="/client/quick.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-title">MAGIC MIRROR<span class="sl">//</span>RETAILCLUB</div>
+  <div class="tb-meta" id="camMeta">CAMERA OFF</div>
+  <div class="tb-sync" id="syncState">LOCAL</div>
+  <div class="tb-status" id="status">READY</div>
+</header>
+
+<main class="workspace">
+
+  <section class="panel" id="panel">
+
+    <details class="sec" open>
+      <summary><span class="mk"></span>Source</summary>
+      <div class="sec-body">
+        <div class="seg" data-param="source">
+          <span class="seg-label">Input</span>
+          <button data-val="0" class="seg-btn active">Camera</button>
+          <button data-val="1" class="seg-btn">Test pattern</button>
+        </div>
+        <button class="cell-btn wide primary" id="btnStart">Start camera</button>
+        <div class="field">
+          <label for="camPick">Device</label>
+          <select id="camPick" class="txt"><option value="">Default camera</option></select>
+        </div>
+        <div class="seg" data-param="mirror">
+          <span class="seg-label">Mirror</span>
+          <button data-val="1" class="seg-btn active">On</button>
+          <button data-val="0" class="seg-btn">Off</button>
+        </div>
+        <div class="field">
+          <label for="aspect">Frame</label>
+          <select id="aspect" class="txt">
+            <option value="0">Fill window</option>
+            <option value="1.7777">16 : 9</option>
+            <option value="0.5625">9 : 16 (portrait)</option>
+            <option value="1">1 : 1</option>
+            <option value="0.8">4 : 5</option>
+          </select>
+        </div>
+        <p class="hint" id="privacy">Video is processed entirely on this device. Nothing is uploaded, stored or recorded.</p>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary><span class="mk"></span>Steadiness</summary>
+      <div class="sec-body">
+        <p class="hint">A live feed jitters — sensor noise alone re-rolls the dissolve every frame.
+          Temporal smoothing averages the incoming image so the grain sits still; the motion field
+          then decides where the dissolve reacts.</p>
+        <div id="secSteady"></div>
+        <div class="seg seg-wrap" data-param="originMode">
+          <span class="seg-label">Origin</span>
+          <button data-val="0" class="seg-btn active">Centre</button>
+          <button data-val="1" class="seg-btn">Follow motion</button>
+          <button data-val="2" class="seg-btn">Manual</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary><span class="mk"></span>Diffusion</summary>
+      <div class="sec-body" id="secDiffusion"></div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Origin &amp; falloff</summary>
+      <div class="sec-body">
+        <p class="hint">Inside the inner radius the image stays sharp. In Manual mode, drag the ◉ handle on the canvas.</p>
+        <div id="secOrigin"></div>
+      </div>
+    </details>
+
+    <details class="sec" open>
+      <summary><span class="mk"></span>Aura</summary>
+      <div class="sec-body">
+        <p class="hint">The dissolved regions are gradient-mapped through a 3-colour ramp that
+          random-walks the full spectrum in OKLCH — drifting forever, never jumping. The sharp core
+          keeps true-to-life colour. “Luma → field” blends between mapping brightness and a slow
+          spatial colour field drifting across the frame.</p>
+        <div id="secAura"></div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Content weighting</summary>
+      <div class="sec-body">
+        <p class="hint">Bias the scatter toward bright/dark or saturated/flat areas.</p>
+        <div id="secWeight"></div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Drift</summary>
+      <div class="sec-body">
+        <div class="seg" data-param="drift">
+          <span class="seg-label">Particles</span>
+          <button data-val="0" class="seg-btn active">Static</button>
+          <button data-val="1" class="seg-btn">Drifting</button>
+        </div>
+        <p class="hint">Static holds every particle in place — the dissolve only changes when you do.
+          Drifting sends the dust travelling on a looping phase with a curl-noise flow.</p>
+        <div id="secDrift"></div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Gaussian blur</summary>
+      <div class="sec-body">
+        <div id="secBlur"></div>
+        <div class="seg" data-param="blurOrder">
+          <span class="seg-label">Order</span>
+          <button data-val="0" class="seg-btn active">After</button>
+          <button data-val="1" class="seg-btn">Before</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Noise</summary>
+      <div class="sec-body">
+        <div id="secNoise"></div>
+        <div class="seg" data-param="noiseBlend">
+          <span class="seg-label">Blend</span>
+          <button data-val="0" class="seg-btn active">Add</button>
+          <button data-val="1" class="seg-btn">Overlay</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Colour</summary>
+      <div class="sec-body" id="secColor"></div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Stage</summary>
+      <div class="sec-body">
+        <div class="field">
+          <label for="bg">Surround / vignette colour</label>
+          <input type="color" id="bg" class="swatch" value="#000000" />
+        </div>
+        <div id="secStage"></div>
+        <div class="seg" data-param="renderScale">
+          <span class="seg-label">Render</span>
+          <button data-val="1" class="seg-btn active">Full</button>
+          <button data-val="0.75" class="seg-btn">¾</button>
+          <button data-val="0.5" class="seg-btn">½</button>
+        </div>
+      </div>
+    </details>
+
+    <details class="sec">
+      <summary><span class="mk"></span>Looks</summary>
+      <div class="sec-body">
+        <div class="row2">
+          <input type="text" id="presetName" class="txt" placeholder="LOOK NAME" />
+          <button class="cell-btn" id="btnPresetSave">Save</button>
+        </div>
+        <div class="preset-list" id="presetList"></div>
+        <div class="rule"></div>
+        <p class="hint">Settings sync live to every screen showing this URL, so you can tune from a
+          laptop while the booth display is running.</p>
+        <div class="seg" id="segSync">
+          <span class="seg-label">Sync</span>
+          <button data-val="1" class="seg-btn active">Live</button>
+          <button data-val="0" class="seg-btn">This screen only</button>
+        </div>
+      </div>
+    </details>
+
+    <div class="panel-pad"></div>
+  </section>
+
+  <section class="preview">
+    <div class="stage" id="stage">
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="gl"></canvas>
+        <svg class="overlay" id="overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="empty" id="empty">
+        <p>START THE CAMERA TO BEGIN</p>
+        <p class="sub">Or switch the input to Test pattern.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="toolbar">
+  <div class="tb-strip" id="tbStrip">—</div>
+  <button class="cell-btn" id="btnSeed">New seed</button>
+  <button class="cell-btn" id="btnReset">Reset</button>
+  <button class="cell-btn" id="btnShot">Snapshot</button>
+  <button class="cell-btn primary" id="btnPresent">Present</button>
+</footer>
+
+<div class="present-hint" id="presentHint" hidden>ESC to exit · P toggles</div>
+<div class="toast-stack" id="toasts"></div>
+<video id="video" playsinline autoplay muted hidden></video>
+
+<script src="shaders.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
